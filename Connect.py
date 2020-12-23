@@ -7,7 +7,7 @@ class TelnetClient:
     def __init__(self, ):
         self.tn = telnetlib.Telnet()
 
-    # 此函数实现telnet登录主机
+    # telnet登录主机
     def login_host(self, host_ip, password):
         try:
             # self.tn = telnetlib.Telnet(host_ip,port=23)
@@ -33,8 +33,8 @@ class TelnetClient:
             logging.warning('%s登录失败，密码错误' % host_ip)
             return False
 
-    # 此函数实现执行传过来的命令，并输出其执行结果
-    def execute_some_command(self, command):
+    # 执行命令，并输出执行结果
+    def execute_command(self, command):
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
         time.sleep(2)
@@ -42,18 +42,48 @@ class TelnetClient:
         command_result = self.tn.read_very_eager().decode('ascii')
         logging.warning('命令执行结果：\n%s' % command_result)
 
-    # 退出telnet
+    # telnet登出主机
     def logout_host(self):
         self.tn.write(b"exit\n")
 
+    # 配置RIP动态路由
+    def config_rip(self, networks):
+        self.execute_command('enable')
+        self.tn.read_until(b'Password: ', timeout=10)
+        self.tn.write('cisco'.encode('ascii') + b'\n')
+        # 延时两秒再收取返回结果，给服务端足够响应时间
+        time.sleep(2)
+        self.execute_command('configure terminal')
+        self.execute_command('router rip')
+        for network in networks:
+            self.execute_command('network ' + network)
+
 
 if __name__ == '__main__':
-    host_ip = '169.254.1.1'
-    # username = 'cisco'
     password = 'cisco'
-    command = 'show ip route'
+
     telnet_client = TelnetClient()
     # 如果登录结果返加True，则执行命令，然后退出
-    if telnet_client.login_host(host_ip, password):
-        telnet_client.execute_some_command(command)
+    if telnet_client.login_host('172.16.0.2', password):
+        telnet_client.execute_command('show ip route')
+        telnet_client.execute_command('show ip protocols')
+        telnet_client.logout_host()
+
+    # router0
+    if telnet_client.login_host('172.16.0.2', password):
+        telnet_client.config_rip(['172.16.0.0', '172.17.0.0'])
+        telnet_client.logout_host()
+    # router1
+    if telnet_client.login_host('172.16.0.3', password):
+        telnet_client.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'])
+        telnet_client.logout_host()
+    # router2
+    if telnet_client.login_host('172.16.0.4', password):
+        telnet_client.config_rip(['172.16.0.0', '172.18.0.0'])
+        telnet_client.logout_host()
+
+    # 如果登录结果返加True，则执行命令，然后退出
+    if telnet_client.login_host('172.16.0.2', password):
+        telnet_client.execute_command('show ip route')
+        telnet_client.execute_command('show ip protocols')
         telnet_client.logout_host()
