@@ -58,6 +58,20 @@ class TelnetClient:
         for network in networks:
             self.execute_command('network ' + network)
 
+    # 配置OSPF
+    # areas区域列表，测试时可全部设为0
+    # mask掩码补码，0.0.255.255
+    def config_ospf(self, networks, areas, mask):
+        self.execute_command('enable')
+        self.tn.read_until(b'Password: ', timeout=10)
+        self.tn.write('cisco'.encode('ascii') + b'\n')
+        # 延时两秒再收取返回结果，给服务端足够响应时间
+        time.sleep(2)
+        self.execute_command('configure terminal')
+        self.execute_command('router ospf 1')
+        for network, area in zip(networks, areas):
+            self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
+
 
 if __name__ == '__main__':
     password = 'cisco'
