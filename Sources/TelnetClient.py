@@ -4,17 +4,18 @@ import time
 
 
 class TelnetClient:
-    def __init__(self, ):
+    def __init__(self):
         self.tn = telnetlib.Telnet()
 
     # telnet登录主机
     def login_host(self, host_ip, password):
         try:
-            # self.tn = telnetlib.Telnet(host_ip,port=23)
+            # self.tn = telnetlib.Telnet(host_ip, port=23)
             self.tn.open(host_ip, port=23)
         except:
-            logging.warning('%s网络连接失败' % host_ip)
-            return False
+            msg = host_ip + ': 网络连接失败'
+            logging.warning(msg)
+            return False, msg
         # 等待login出现后输入用户名，最多等待10秒
         # self.tn.read_until(b'login: ', timeout=10)
         # self.tn.write(username.encode('ascii') + b'\n')
@@ -27,11 +28,13 @@ class TelnetClient:
         # read_very_eager()获取到的是的是上次获取之后本次获取之前的所有输出
         command_result = self.tn.read_very_eager().decode('ascii')
         if 'Password:' not in command_result:
-            logging.warning('%s登录成功' % host_ip)
-            return True
+            msg = host_ip + ': 登录成功'
+            logging.warning(msg)
+            return True, msg
         else:
-            logging.warning('%s登录失败，密码错误' % host_ip)
-            return False
+            msg = host_ip + ': 登录失败，密码错误'
+            logging.warning(msg)
+            return False, msg
 
     # 执行命令，并输出执行结果
     def execute_command(self, command):
@@ -39,12 +42,14 @@ class TelnetClient:
         self.tn.write(command.encode('ascii') + b'\n')
         time.sleep(2)
         # 获取命令结果
-        command_result = self.tn.read_very_eager().decode('ascii')
-        logging.warning('命令执行结果：\n%s' % command_result)
+        result = self.tn.read_very_eager().decode('ascii')
+        logging.warning('命令执行结果：\n%s' % result)
+        return result
 
     # telnet登出主机
     def logout_host(self):
         self.tn.write(b"exit\n")
+        return True
 
     # 配置RIP动态路由
     def config_rip(self, networks):
@@ -57,6 +62,7 @@ class TelnetClient:
         self.execute_command('router rip')
         for network in networks:
             self.execute_command('network ' + network)
+        return True
 
     # 配置OSPF
     # areas区域列表，测试时可全部设为0
@@ -71,33 +77,4 @@ class TelnetClient:
         self.execute_command('router ospf 1')
         for network, area in zip(networks, areas):
             self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
-
-
-if __name__ == '__main__':
-    password = 'cisco'
-
-    telnet_client = TelnetClient()
-    # 如果登录结果返加True，则执行命令，然后退出
-    if telnet_client.login_host('172.16.0.2', password):
-        telnet_client.execute_command('show ip route')
-        telnet_client.execute_command('show ip protocols')
-        telnet_client.logout_host()
-
-    # router0
-    if telnet_client.login_host('172.16.0.2', password):
-        telnet_client.config_rip(['172.16.0.0', '172.17.0.0'])
-        telnet_client.logout_host()
-    # router1
-    if telnet_client.login_host('172.16.0.3', password):
-        telnet_client.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'])
-        telnet_client.logout_host()
-    # router2
-    if telnet_client.login_host('172.16.0.4', password):
-        telnet_client.config_rip(['172.16.0.0', '172.18.0.0'])
-        telnet_client.logout_host()
-
-    # 如果登录结果返加True，则执行命令，然后退出
-    if telnet_client.login_host('172.16.0.2', password):
-        telnet_client.execute_command('show ip route')
-        telnet_client.execute_command('show ip protocols')
-        telnet_client.logout_host()
+        return True
