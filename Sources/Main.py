@@ -1,13 +1,53 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from TelnetClient import TelnetClient
 
 app = Flask(__name__)
 
 
-@app.route('/')
-def hello_world():
-    return 'Hello World'
+# telnet登陆设备
+@app.route('/login_host', methods=['POST'])
+def login_host():
+    # 从form-data中获取设备编号, ip, 密码
+    device_no = request.form['device_no']
+    ip = request.form['ip']
+    pwd = request.form['password']
+
+    # 登录成功返加true，否则返回false
+    if device_no == 's2':
+        is_succeed, msg = switch2.login_host(ip, pwd)
+    elif device_no == 'r0':
+        is_succeed, msg = router0.login_host(ip, pwd)
+    elif device_no == 'r1':
+        is_succeed, msg = router1.login_host(ip, pwd)
+    elif device_no == 'r2':
+        is_succeed, msg = router2.login_host(ip, pwd)
+    else:
+        is_succeed = False
+        msg = '不支持的设备'
+
+    result = {'state': is_succeed, 'msg': msg}
+    return jsonify(result)
+
+
+# telnet登出设备
+@app.route('/login_out', methods=['POST'])
+def login_out():
+    # 从form-data中获取设备编号
+    device_no = request.form['device_no']
+    if device_no == 's2':
+        is_succeed, msg = switch2.logout_host()
+    elif device_no == 'r0':
+        is_succeed, msg = router0.logout_host()
+    elif device_no == 'r1':
+        is_succeed, msg = router1.logout_host()
+    elif device_no == 'r2':
+        is_succeed, msg = router2.logout_host()
+    else:
+        is_succeed = False
+        msg = '不支持的设备'
+    result = {'state': is_succeed, 'msg': msg}
+    return jsonify(result)
 
 
 @app.route('/show_info', methods=['POST'])
@@ -44,4 +84,8 @@ def config_rip():
 if __name__ == '__main__':
     password = 'cisco'
     telnet_client = TelnetClient()
+    switch2 = TelnetClient()
+    router0 = TelnetClient()
+    router1 = TelnetClient()
+    router2 = TelnetClient()
     app.run()
