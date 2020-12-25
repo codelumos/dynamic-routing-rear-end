@@ -31,9 +31,9 @@ class TelnetClient:
         time.sleep(2)
         # 获取登录结果
         # read_very_eager()获取到的是的是上次获取之后本次获取之前的所有输出
-        command_result = self.tn.read_very_eager().decode('ascii')
+        login_result = self.tn.read_very_eager().decode('ascii')
         # 当密码错误时，会提示再次输入密码，以此来判断密码错误
-        if 'Password:' not in command_result:
+        if 'Password:' not in login_result:
             msg = ip + ':登录成功'
             # 登陆成功，则记录设备的ip和密码
             self.host_ip = ip
@@ -76,11 +76,20 @@ class TelnetClient:
         self.tn.write(en_password.encode('ascii') + b'\n')
         # 延时两秒再读取返回结果，给服务端足够响应时间
         time.sleep(2)
-        self.execute_command('configure terminal')
-        self.execute_command('router rip')
-        for network in networks:
-            self.execute_command('network ' + network)
-        return True
+        enable_result = self.tn.read_very_eager().decode('ascii')
+        # 如果成功进入特权模式，则配置RIP
+        if 'Password:' not in enable_result:
+            self.execute_command('configure terminal')
+            self.execute_command('router rip')
+            for network in networks:
+                self.execute_command('network ' + network)
+            self.execute_command('exit')
+            msg = self.host_ip + ':RIP配置完成'
+            return True, msg
+        else:
+            msg = self.host_ip + ':RIP配置失败，特权密码错误'
+            logging.warning(msg)
+            return False, msg
 
     '''
     配置OSPF
