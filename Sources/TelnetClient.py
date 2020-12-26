@@ -84,6 +84,7 @@ class TelnetClient:
             for network in networks:
                 self.execute_command('network ' + network)
             self.execute_command('exit')
+            self.execute_command('disable')
             msg = self.host_ip + ':RIP配置完成'
             return True, msg
         else:
@@ -110,6 +111,7 @@ class TelnetClient:
             for network, area in zip(networks, areas):
                 self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
             self.execute_command('exit')
+            self.execute_command('disable')
             msg = self.host_ip + ':OSPF配置完成'
             return True, msg
         else:
