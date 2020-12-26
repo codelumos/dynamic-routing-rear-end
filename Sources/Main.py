@@ -71,6 +71,24 @@ def config_rip():
     return jsonify(result)
 
 
+# 配置OSPF协议
+@app.route('/config_ospf', methods=['POST'])
+def config_ospf():
+    # 从form-data中获取特权密码
+    en_pwd_r0 = request.form['en_pwd_r0']
+    en_pwd_r1 = request.form['en_pwd_r1']
+    en_pwd_r2 = request.form['en_pwd_r2']
+
+    is_succeed_r0, msg_r0 = router0.config_rip(en_pwd_r0, ['172.16.0.0', '172.17.0.0'], ['0', '0'],
+                                               '0.0.255.255')  # router0
+    is_succeed_r1, msg_r1 = router1.config_rip(en_pwd_r1, ['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
+                                               '0.0.255.255')  # router1
+    is_succeed_r2, msg_r2 = router2.config_rip(en_pwd_r2, ['172.16.0.0', '172.18.0.0'], ['0', '0'],
+                                               '0.0.255.255')  # router2
+    result = {'state': is_succeed_r0 and is_succeed_r1 and is_succeed_r2, 'msg': msg_r0 + ', ' + msg_r1 + ', ' + msg_r2}
+    return jsonify(result)
+
+
 def get_device(dev_no):
     if dev_no == 's2':
         return switch2
