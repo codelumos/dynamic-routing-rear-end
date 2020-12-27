@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from TelnetClient import TelnetClient
+from services.TelnetClient import TelnetClient
 
 app = Flask(__name__)
 

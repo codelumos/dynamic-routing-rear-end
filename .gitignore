@@ -1,0 +1,16 @@
+# local env files
+.env.local
+.env.*.local
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
