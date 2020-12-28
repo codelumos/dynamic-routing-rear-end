@@ -1,9 +1,21 @@
 from flask import Flask, request, jsonify
-
+from flask_cors import *
+import json
 from services.TelnetClient import TelnetClient
 
 app = Flask(__name__)
+# 允许跨域访问
+CORS(app, supports_credentials=True)
 
+# 前端调用测试接口
+@app.route('/test', methods=['POST'])
+def test():
+    # 获取前端传递的参数
+    data = request.get_data()
+    # 转换成dict
+    data = json.loads(data.decode("utf-8"))
+    print(data)
+    return 'a'
 
 # telnet登陆设备
 @app.route('/login', methods=['POST'])
