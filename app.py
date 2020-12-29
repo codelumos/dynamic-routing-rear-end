@@ -1,11 +1,20 @@
+import json
+
 from flask import Flask, request, jsonify
 from flask_cors import *
-import json
+
 from services.TelnetClient import TelnetClient
 
 app = Flask(__name__)
 # 允许跨域访问
 CORS(app, supports_credentials=True)
+
+
+# 根目录
+@app.route('/')
+def hello():
+    return '动态路由后端启动，Running on http://127.0.0.1:5000/'
+
 
 # 前端调用测试接口
 @app.route('/test', methods=['POST'])
@@ -13,8 +22,10 @@ def test():
     # 获取前端传递的参数
     # 转换成dict
     data = json.loads(request.get_data())
-    print(data['pwd'])
+    print(data)
+    print('pwd: ', data['pwd'])
     return '调用完毕'
+
 
 # telnet登陆设备
 @app.route('/login', methods=['POST'])
