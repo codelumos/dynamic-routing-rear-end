@@ -1,4 +1,5 @@
 import json
+import logging
 
 from flask import Flask, request, jsonify
 from flask_cors import *
@@ -13,18 +14,8 @@ CORS(app, supports_credentials=True)
 # 根目录
 @app.route('/')
 def hello():
+    logging.info('/被调用')
     return '动态路由后端启动，Running on http://127.0.0.1:5000/'
-
-
-# 前端调用测试接口
-@app.route('/test', methods=['POST'])
-def test():
-    # 获取前端传递的参数
-    # 转换成dict
-    data = json.loads(request.get_data())
-    print(data)
-    print('pwd: ', data['pwd'])
-    return '调用完毕'
 
 
 # telnet登陆设备
@@ -37,6 +28,7 @@ def login_host():
     ip = data['ip']
     pwd = data['pwd']
 
+    logging.info('Login:' + str(data))
     device = get_device(dev_no)
     # 登录成功返加true，否则返回false
     if dev_no is not None:
@@ -56,6 +48,7 @@ def logout_host():
     # 获取设备编号
     dev_no = data['dev_no']
 
+    logging.info('Logout:' + str(data))
     device = get_device(dev_no)
     # 登出成功返加true，否则返回false
     if dev_no is not None:
@@ -74,6 +67,8 @@ def show_info():
     data = json.loads(request.get_data())
     # 获取设备编号
     dev_no = data['dev_no']
+
+    logging.info('Show info:' + str(data))
     device = get_device(dev_no)
     # 执行命令
     route = device.execute_command('show ip route')
@@ -91,6 +86,7 @@ def config_rip():
     en_pwd_r1 = data['en_pwd_r1']
     en_pwd_r2 = data['en_pwd_r2']
 
+    logging.info('Config RIP:' + str(data))
     is_succeed_r0, msg_r0 = router0.config_rip(['172.16.0.0', '172.17.0.0'], en_pwd_r0)
     is_succeed_r1, msg_r1 = router1.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'], en_pwd_r1)
     is_succeed_r2, msg_r2 = router2.config_rip(['172.16.0.0', '172.18.0.0'], en_pwd_r2)
@@ -110,6 +106,7 @@ def config_ospf():
     en_pwd_r1 = data['en_pwd_r1']
     en_pwd_r2 = data['en_pwd_r2']
 
+    logging.info('Config OSPF:' + str(data))
     is_succeed_r0, msg_r0 = router0.config_ospf(en_pwd_r0, ['172.16.0.0', '172.17.0.0'], ['0', '0'], '0.0.255.255')
     is_succeed_r1, msg_r1 = router1.config_ospf(en_pwd_r1, ['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
                                                 '0.0.255.255')
