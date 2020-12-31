@@ -14,7 +14,7 @@ CORS(app, supports_credentials=True)
 # 根目录
 @app.route('/')
 def hello():
-    logging.info('/被调用')
+    logging.info('/')
     return '动态路由后端启动，Running on http://127.0.0.1:5000/'
 
 
@@ -62,7 +62,7 @@ def logout_host():
 
 
 # 查看路由表和路由协议
-@app.route('/show_info', methods=['POST'])
+@app.route('/info', methods=['POST'])
 def show_info():
     data = json.loads(request.get_data())
     logging.info('Show info:' + str(data))
@@ -78,7 +78,7 @@ def show_info():
 
 
 # 配置RIP动态路由
-@app.route('/config_rip', methods=['POST'])
+@app.route('/config/rip', methods=['POST'])
 def config_rip():
     data = json.loads(request.get_data())
     logging.info('Config RIP:' + str(data))
@@ -98,7 +98,7 @@ def config_rip():
 
 
 # 配置OSPF协议
-@app.route('/config_ospf', methods=['POST'])
+@app.route('/config/ospf', methods=['POST'])
 def config_ospf():
     data = json.loads(request.get_data())
     logging.info('Config OSPF:' + str(data))
@@ -118,9 +118,10 @@ def config_ospf():
     return jsonify(result)
 
 
-@app.route('/config_bgp', methods=['POST'])
+@app.route('/config/bgp', methods=['POST'])
 def config_bgp():
     data = json.loads(request.get_data())
+    logging.info('Config BGP:' + str(data))
     is_succeed = True
     msg = '配置完成'
     # is_succeed = False
