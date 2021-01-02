@@ -61,6 +61,40 @@ def logout_host():
     return jsonify(result)
 
 
+# 配置serial口
+'''
+前端传递数据格式
+{
+    "info_router0":{
+        "pwd":"cisco",
+        "ip_serial":["1.1.1.1","2.2.2.2"],
+        "mask":"255.255.0.0"
+    }
+}
+'''
+
+
+@app.route('/config_s', methods=['POST'])
+def config_s():
+    data = json.loads(request.get_data())
+    logging.info('IP config:' + str(data))
+
+    # 获取各个路由器配置信息，包括特权密码、serial口地址、子网掩码
+    info_router0 = data['info_router0']
+    info_router1 = data['info_router1']
+    info_router2 = data['info_router2']
+
+    # 执行配置命令
+    is_succeed_r0, msg_r0 = router0.config_s(info_router0['pwd'], info_router0['ip_serial'], info_router0['mask'])
+    is_succeed_r1, msg_r1 = router1.config_s(info_router1['pwd'], info_router0['ip_serial'], info_router0['mask'])
+    is_succeed_r2, msg_r2 = router2.config_s(info_router2['pwd'], info_router0['ip_serial'], info_router0['mask'])
+
+    is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
+    msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2
+    result = {'state': is_succeed, 'msg': msg}
+    return jsonify(result)
+
+
 # 查看路由表和路由协议
 @app.route('/info', methods=['POST'])
 def show_info():

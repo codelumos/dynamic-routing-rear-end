@@ -60,6 +60,7 @@ class TelnetClient:
     '''
     telnet登出设备
     '''
+
     def logout_host(self):
         self.tn.write(b"exit\n")
         msg = self.host_ip + ':登出'
@@ -67,9 +68,41 @@ class TelnetClient:
         return True, msg
 
     '''
+    配置路由器serial口
+    '''
+
+    def config_s(self, en_password, ip_serial, mask):
+        self.execute_command('enable')
+        self.tn.read_until(b'Password: ', timeout=10)
+        self.tn.write(en_password.encode('ascii') + b'\n')
+        # 延时两秒再读取返回结果，给服务端足够响应时间
+        time.sleep(2)
+        enable_result = self.tn.read_very_eager().decode('ascii')
+        # 如果成功进入特权模式，则配置serial口
+        if 'Password:' not in enable_result:
+            self.execute_command('configure terminal')
+            for i, ip in zip(range(len(ip_serial)), ip_serial):
+                # 通过ip是否为空判断是否要配置对应serial口
+                if len(ip) > 0:
+                    self.execute_command('interface s0/0/' + i)
+                    self.execute_command('ip address ' + ip + ' ' + mask)
+                    self.execute_command('no shutdown')
+                    time.sleep(2)
+                    self.execute_command('exit')
+            self.execute_command('exit')
+            self.execute_command('disable')
+            msg = self.host_ip + ':serial口配置完成'
+            return True, msg
+        else:
+            msg = self.host_ip + ':serial口配置失败，特权密码错误'
+            logging.warning(msg)
+            return False, msg
+
+    '''
     配置RIP动态路由
     networks    网络列表
     '''
+
     def config_rip(self, networks, en_password):
         self.execute_command('enable')
         self.tn.read_until(b'Password: ', timeout=10)
