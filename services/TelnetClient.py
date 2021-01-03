@@ -14,7 +14,7 @@ class TelnetClient:
 
     '''
     telnet登录设备
-    ip          设备ip
+    ip          设备IP
     password    telnet密码
     '''
     def login_host(self, ip, password):
@@ -46,7 +46,17 @@ class TelnetClient:
             return False, msg
 
     '''
+    telnet登出设备
+    '''
+    def logout_host(self):
+        self.tn.write(b"exit\n")
+        msg = self.host_ip + ':登出'
+        logging.info(msg)
+        return True, msg
+
+    '''
     执行命令，并输出执行结果
+    command     命令语句
     '''
     def execute_command(self, command):
         # 执行命令
@@ -58,19 +68,9 @@ class TelnetClient:
         return result
 
     '''
-    telnet登出设备
-    '''
-
-    def logout_host(self):
-        self.tn.write(b"exit\n")
-        msg = self.host_ip + ':登出'
-        logging.info(msg)
-        return True, msg
-
-    '''
     进入特权模式
+    en_password     特权密码
     '''
-
     def enable(self, en_password):
         self.execute_command('enable')
         self.tn.read_until(b'Password: ', timeout=10)
@@ -80,6 +80,8 @@ class TelnetClient:
         enable_result = self.tn.read_very_eager().decode('ascii')
         if 'Password:' not in enable_result:
             msg = self.host_ip + ':已进入特权模式'
+            # 成功则记录设备的特权密码
+            self.enable_pwd = en_password
             return True, msg
         else:
             msg = self.host_ip + ':进入特权模式失败'
@@ -87,12 +89,13 @@ class TelnetClient:
             return False, msg
 
     '''
-    配置路由器serial口
+    配置串行接口
+    serial_ip   串行接口IP
+    mask        子网掩码
     '''
-
-    def init(self, ip_serial, mask):
+    def init_serial(self, serial_ip, mask):
         self.execute_command('configure terminal')
-        for i, ip in zip(range(len(ip_serial)), ip_serial):
+        for i, ip in zip(range(len(serial_ip)), serial_ip):
             # 通过ip是否为空判断是否要配置对应serial口
             if len(ip) > 0:
                 self.execute_command('interface s0/0/' + i)
@@ -106,10 +109,9 @@ class TelnetClient:
         return True, msg
 
     '''
-    配置RIP动态路由
+    配置RIP协议
     networks    网络列表
     '''
-
     def config_rip(self, networks):
         self.execute_command('configure terminal')
         self.execute_command('router rip')
@@ -120,11 +122,10 @@ class TelnetClient:
         return True, msg
 
     '''
-    配置OSPF
+    配置OSPF协议
     areas   区域列表，测试时可全部设为0
     mask    掩码补码，0.0.255.255
     '''
-
     def config_ospf(self, networks, areas, mask):
         self.execute_command('configure terminal')
         self.execute_command('router ospf 1')

@@ -7,8 +7,7 @@ from flask_cors import *
 from services.TelnetClient import TelnetClient
 
 app = Flask(__name__)
-# 允许跨域访问
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True)  # 允许跨域访问
 
 
 # 根目录
@@ -78,32 +77,30 @@ def enable():
     return jsonify(result)
 
 
-# 配置serial口
-'''
-前端传递数据格式
-{
-    "info_router0":{
-        "ip_serial":["1.1.1.1","2.2.2.2"],
-        "mask":"255.255.0.0"
-    }
-}
-'''
-
-
+# 配置串行接口
 @app.route('/init', methods=['POST'])
-def init():
+def init_serial():
+    """
+    前端传递数据格式
+    {
+        "r0": {
+            "serial_ip": ["1.1.1.1", "2.2.2.2"],
+            "mask": "255.255.0.0"
+        }
+    }
+    """
     data = json.loads(request.get_data())
-    logging.info('IP config:' + str(data))
+    logging.info('Init Serial:' + str(data))
 
-    # 获取各个路由器配置信息，包括特权密码、serial口地址、子网掩码
-    info_router0 = data['info_router0']
-    info_router1 = data['info_router1']
-    info_router2 = data['info_router2']
+    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
+    info_r0 = data['r0']
+    info_r1 = data['r1']
+    info_r2 = data['r2']
 
     # 执行配置命令
-    is_succeed_r0, msg_r0 = router0.config_s(info_router0['ip_serial'], info_router0['mask'])
-    is_succeed_r1, msg_r1 = router1.config_s(info_router1['ip_serial'], info_router1['mask'])
-    is_succeed_r2, msg_r2 = router2.config_s(info_router2['ip_serial'], info_router2['mask'])
+    is_succeed_r0, msg_r0 = router0.init_serial(info_r0['serial_ip'], info_r0['mask'])
+    is_succeed_r1, msg_r1 = router1.init_serial(info_r1['serial_ip'], info_r1['mask'])
+    is_succeed_r2, msg_r2 = router2.init_serial(info_r2['serial_ip'], info_r2['mask'])
 
     is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
     msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2
@@ -127,7 +124,7 @@ def show_info():
     return jsonify(result)
 
 
-# 配置RIP动态路由
+# 配置RIP协议
 @app.route('/config/rip', methods=['POST'])
 def config_rip():
     data = json.loads(request.get_data())
@@ -160,6 +157,7 @@ def config_ospf():
     return jsonify(result)
 
 
+# 配置BGP协议（仅测试）
 @app.route('/config/bgp', methods=['POST'])
 def config_bgp():
     data = json.loads(request.get_data())
