@@ -61,12 +61,28 @@ def logout_host():
     return jsonify(result)
 
 
+# 进入特权模式
+@app.route('/enable', methods=['POST'])
+def enable():
+    data = json.loads(request.get_data())
+    logging.info('Enable:' + str(data))
+
+    # 执行进入特权模式命令
+    is_succeed_r0, msg_r0 = router0.enable(data['pwd_r0'])
+    is_succeed_r1, msg_r1 = router1.enable(data['pwd_r1'])
+    is_succeed_r2, msg_r2 = router2.enable(data['pwd_r2'])
+
+    is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
+    msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2
+    result = {'state': is_succeed, 'msg': msg}
+    return jsonify(result)
+
+
 # 配置serial口
 '''
 前端传递数据格式
 {
     "info_router0":{
-        "pwd":"cisco",
         "ip_serial":["1.1.1.1","2.2.2.2"],
         "mask":"255.255.0.0"
     }
@@ -74,8 +90,8 @@ def logout_host():
 '''
 
 
-@app.route('/config_s', methods=['POST'])
-def config_s():
+@app.route('/init', methods=['POST'])
+def init():
     data = json.loads(request.get_data())
     logging.info('IP config:' + str(data))
 
@@ -85,9 +101,9 @@ def config_s():
     info_router2 = data['info_router2']
 
     # 执行配置命令
-    is_succeed_r0, msg_r0 = router0.config_s(info_router0['pwd'], info_router0['ip_serial'], info_router0['mask'])
-    is_succeed_r1, msg_r1 = router1.config_s(info_router1['pwd'], info_router0['ip_serial'], info_router0['mask'])
-    is_succeed_r2, msg_r2 = router2.config_s(info_router2['pwd'], info_router0['ip_serial'], info_router0['mask'])
+    is_succeed_r0, msg_r0 = router0.config_s(info_router0['ip_serial'], info_router0['mask'])
+    is_succeed_r1, msg_r1 = router1.config_s(info_router1['ip_serial'], info_router1['mask'])
+    is_succeed_r2, msg_r2 = router2.config_s(info_router2['ip_serial'], info_router2['mask'])
 
     is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
     msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2
@@ -116,14 +132,10 @@ def show_info():
 def config_rip():
     data = json.loads(request.get_data())
     logging.info('Config RIP:' + str(data))
-    # 获取特权密码
-    en_pwd_r0 = data['pwd_r0']
-    en_pwd_r1 = data['pwd_r1']
-    en_pwd_r2 = data['pwd_r2']
 
-    is_succeed_r0, msg_r0 = router0.config_rip(['172.16.0.0', '172.17.0.0'], en_pwd_r0)
-    is_succeed_r1, msg_r1 = router1.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'], en_pwd_r1)
-    is_succeed_r2, msg_r2 = router2.config_rip(['172.16.0.0', '172.18.0.0'], en_pwd_r2)
+    is_succeed_r0, msg_r0 = router0.config_rip(['172.16.0.0', '172.17.0.0'])
+    is_succeed_r1, msg_r1 = router1.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'])
+    is_succeed_r2, msg_r2 = router2.config_rip(['172.16.0.0', '172.18.0.0'])
 
     is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
     msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2
@@ -136,15 +148,11 @@ def config_rip():
 def config_ospf():
     data = json.loads(request.get_data())
     logging.info('Config OSPF:' + str(data))
-    # 获取特权密码
-    en_pwd_r0 = data['en_pwd_r0']
-    en_pwd_r1 = data['en_pwd_r1']
-    en_pwd_r2 = data['en_pwd_r2']
 
-    is_succeed_r0, msg_r0 = router0.config_ospf(en_pwd_r0, ['172.16.0.0', '172.17.0.0'], ['0', '0'], '0.0.255.255')
-    is_succeed_r1, msg_r1 = router1.config_ospf(en_pwd_r1, ['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
+    is_succeed_r0, msg_r0 = router0.config_ospf(['172.16.0.0', '172.17.0.0'], ['0', '0'], '0.0.255.255')
+    is_succeed_r1, msg_r1 = router1.config_ospf(['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
                                                 '0.0.255.255')
-    is_succeed_r2, msg_r2 = router2.config_ospf(en_pwd_r2, ['172.16.0.0', '172.18.0.0'], ['0', '0'], '0.0.255.255')
+    is_succeed_r2, msg_r2 = router2.config_ospf(['172.16.0.0', '172.18.0.0'], ['0', '0'], '0.0.255.255')
 
     is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
     msg = msg_r0 + ', ' + msg_r1 + ', ' + msg_r2

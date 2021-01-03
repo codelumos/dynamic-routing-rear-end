@@ -68,86 +68,68 @@ class TelnetClient:
         return True, msg
 
     '''
-    配置路由器serial口
+    进入特权模式
     '''
 
-    def config_s(self, en_password, ip_serial, mask):
+    def enable(self, en_password):
         self.execute_command('enable')
         self.tn.read_until(b'Password: ', timeout=10)
         self.tn.write(en_password.encode('ascii') + b'\n')
         # 延时两秒再读取返回结果，给服务端足够响应时间
         time.sleep(2)
         enable_result = self.tn.read_very_eager().decode('ascii')
-        # 如果成功进入特权模式，则配置serial口
         if 'Password:' not in enable_result:
-            self.execute_command('configure terminal')
-            for i, ip in zip(range(len(ip_serial)), ip_serial):
-                # 通过ip是否为空判断是否要配置对应serial口
-                if len(ip) > 0:
-                    self.execute_command('interface s0/0/' + i)
-                    self.execute_command('ip address ' + ip + ' ' + mask)
-                    self.execute_command('no shutdown')
-                    time.sleep(2)
-                    self.execute_command('exit')
-            self.execute_command('exit')
-            self.execute_command('disable')
-            msg = self.host_ip + ':serial口配置完成'
+            msg = self.host_ip + ':已进入特权模式'
             return True, msg
         else:
-            msg = self.host_ip + ':serial口配置失败，特权密码错误'
+            msg = self.host_ip + ':进入特权模式失败'
             logging.warning(msg)
             return False, msg
+
+    '''
+    配置路由器serial口
+    '''
+
+    def init(self, ip_serial, mask):
+        self.execute_command('configure terminal')
+        for i, ip in zip(range(len(ip_serial)), ip_serial):
+            # 通过ip是否为空判断是否要配置对应serial口
+            if len(ip) > 0:
+                self.execute_command('interface s0/0/' + i)
+                self.execute_command('ip address ' + ip + ' ' + mask)
+                self.execute_command('no shutdown')
+                time.sleep(2)
+                self.execute_command('exit')
+        self.execute_command('exit')
+
+        msg = self.host_ip + ':serial口配置完成'
+        return True, msg
 
     '''
     配置RIP动态路由
     networks    网络列表
     '''
 
-    def config_rip(self, networks, en_password):
-        self.execute_command('enable')
-        self.tn.read_until(b'Password: ', timeout=10)
-        self.tn.write(en_password.encode('ascii') + b'\n')
-        # 延时两秒再读取返回结果，给服务端足够响应时间
-        time.sleep(2)
-        enable_result = self.tn.read_very_eager().decode('ascii')
-        # 如果成功进入特权模式，则配置RIP
-        if 'Password:' not in enable_result:
-            self.execute_command('configure terminal')
-            self.execute_command('router rip')
-            for network in networks:
-                self.execute_command('network ' + network)
-            self.execute_command('exit')
-            self.execute_command('disable')
-            msg = self.host_ip + ':RIP配置完成'
-            return True, msg
-        else:
-            msg = self.host_ip + ':RIP配置失败，特权密码错误'
-            logging.warning(msg)
-            return False, msg
+    def config_rip(self, networks):
+        self.execute_command('configure terminal')
+        self.execute_command('router rip')
+        for network in networks:
+            self.execute_command('network ' + network)
+        self.execute_command('exit')
+        msg = self.host_ip + ':RIP配置完成'
+        return True, msg
 
     '''
     配置OSPF
     areas   区域列表，测试时可全部设为0
     mask    掩码补码，0.0.255.255
     '''
-    def config_ospf(self, en_password, networks, areas, mask):
-        self.execute_command('enable')
-        self.tn.read_until(b'Password: ', timeout=10)
-        self.tn.write(en_password.encode('ascii') + b'\n')
-        # 延时两秒再读取返回结果，给服务端足够响应时间
-        time.sleep(2)
-        enable_result = self.tn.read_very_eager().decode('ascii')
-        # 如果成功进入特权模式，则配置OSPF
-        if 'Password:' not in enable_result:
-            self.execute_command('configure terminal')
-            self.execute_command('router ospf 1')
-            for network, area in zip(networks, areas):
-                self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
-            self.execute_command('exit')
-            self.execute_command('disable')
-            msg = self.host_ip + ':OSPF配置完成'
-            return True, msg
-        else:
-            msg = self.host_ip + ':OSPF配置失败，特权密码错误'
-            logging.warning(msg)
-            return False, msg
+
+    def config_ospf(self, networks, areas, mask):
+        self.execute_command('configure terminal')
+        self.execute_command('router ospf 1')
+        for network, area in zip(networks, areas):
+            self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
+        self.execute_command('exit')
+        msg = self.host_ip + ':OSPF配置完成'
+        return True, msg
