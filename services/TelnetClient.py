@@ -97,15 +97,15 @@ class TelnetClient:
         self.execute_command('configure terminal')
         for i, ip in zip(range(len(serial_ip)), serial_ip):
             # 通过ip是否为空判断是否要配置对应serial口
-            if len(ip) > 0:
-                self.execute_command('interface s0/0/' + i)
+            if len(ip) > 1:
+                self.execute_command('interface s0/0/' + str(i))
                 self.execute_command('ip address ' + ip + ' ' + mask)
                 self.execute_command('no shutdown')
                 time.sleep(2)
                 self.execute_command('exit')
         self.execute_command('exit')
 
-        msg = self.host_ip + ':serial口配置完成'
+        msg = self.host_ip + ':串行接口配置完成'
         return True, msg
 
     '''
@@ -117,6 +117,7 @@ class TelnetClient:
         self.execute_command('router rip')
         for network in networks:
             self.execute_command('network ' + network)
+        self.execute_command('exit')
         self.execute_command('exit')
         msg = self.host_ip + ':RIP配置完成'
         return True, msg
@@ -131,6 +132,7 @@ class TelnetClient:
         self.execute_command('router ospf 1')
         for network, area in zip(networks, areas):
             self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
+        self.execute_command('exit')
         self.execute_command('exit')
         msg = self.host_ip + ':OSPF配置完成'
         return True, msg

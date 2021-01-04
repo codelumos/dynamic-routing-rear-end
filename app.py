@@ -127,8 +127,7 @@ def show_info():
 # 配置RIP协议
 @app.route('/config/rip', methods=['POST'])
 def config_rip():
-    data = json.loads(request.get_data())
-    logging.info('Config RIP:' + str(data))
+    logging.info('Config RIP')
 
     is_succeed_r0, msg_r0 = router0.config_rip(['172.16.0.0', '172.17.0.0'])
     is_succeed_r1, msg_r1 = router1.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'])
@@ -143,8 +142,7 @@ def config_rip():
 # 配置OSPF协议
 @app.route('/config/ospf', methods=['POST'])
 def config_ospf():
-    data = json.loads(request.get_data())
-    logging.info('Config OSPF:' + str(data))
+    logging.info('Config OSPF')
 
     is_succeed_r0, msg_r0 = router0.config_ospf(['172.16.0.0', '172.17.0.0'], ['0', '0'], '0.0.255.255')
     is_succeed_r1, msg_r1 = router1.config_ospf(['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
@@ -160,8 +158,7 @@ def config_ospf():
 # 配置BGP协议（仅测试）
 @app.route('/config/bgp', methods=['POST'])
 def config_bgp():
-    data = json.loads(request.get_data())
-    logging.info('Config BGP:' + str(data))
+    logging.info('Config BGP')
     is_succeed = True
     msg = '配置完成'
     # is_succeed = False
