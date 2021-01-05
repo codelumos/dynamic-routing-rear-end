@@ -148,7 +148,7 @@ def show_info():
         route = device.execute_command('show ip route')
         protocol = device.execute_command('show ip protocols')
         is_succeed = True
-        msg = '查询信息成功'
+        msg = get_protocol(protocol)
         info = {'route': device.name + '>' + route, 'protocol': device.name + '>' + protocol}
     except Exception as e:
         logging.error(e)
@@ -216,15 +216,23 @@ def config_bgp():
     logging.info('Config BGP')
     is_succeed = True
     msg = 'BGP协议配置成功'
-    info = ''
     # is_succeed = False
     # msg = 'BGP协议配置失败'
-    # info = ''
+    info = '配置BGP协议（仅测试）'
     result = {'state': is_succeed, 'msg': msg, 'info': info}
     return jsonify(result)
 
 
-# 返回设备对象
+# 获取路由协议
+def get_protocol(protocol):
+    if 'ospf' in protocol:
+        return '当前路由协议: OSPF'
+    if 'rip' in protocol:
+        return '当前路由协议: RIP'
+    return '尚未配置路由协议'
+
+
+# 获取设备对象
 def get_device(dev_no):
     if dev_no == 's2':
         return switch2
