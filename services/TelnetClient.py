@@ -4,12 +4,14 @@ import time
 
 
 class TelnetClient:
+    name = 'default'
     host_ip = '127.0.0.1'
     telnet_pwd = 'cisco'
     enable_pwd = 'cisco'
 
-    def __init__(self):
-        logging.basicConfig(level=logging.NOTSET)
+    def __init__(self, name='default'):
+        logging.basicConfig(level=logging.NOTSET)  # 设置日志级别
+        self.name = name
         self.tn = telnetlib.Telnet()
 
     '''
@@ -21,8 +23,8 @@ class TelnetClient:
         try:
             self.tn.open(ip, port=23)
         except:
-            msg = ip + ':网络连接失败'
-            logging.warning(msg)
+            msg = '网络连接失败'
+            logging.warning(ip + ':' + msg)
             return False, msg
         # 等待Password出现后输入密码，最多等待10秒
         self.tn.read_until(b'Password: ', timeout=10)
@@ -34,15 +36,15 @@ class TelnetClient:
         login_result = self.tn.read_very_eager().decode('ascii')
         # 当密码错误时，会提示再次输入密码，以此来判断密码错误
         if 'Password:' not in login_result:
-            msg = ip + ':登录成功'
+            msg = self.name + '登录成功'
             # 登陆成功，则记录设备的ip和密码
             self.host_ip = ip
             self.telnet_pwd = password
-            logging.info(msg)
+            logging.info(ip + ':' + msg)
             return True, msg
         else:
-            msg = ip + ':登录失败，密码错误'
-            logging.warning(msg)
+            msg = self.name + '登录失败，密码错误'
+            logging.warning(ip + ':' + msg)
             return False, msg
 
     '''
@@ -50,8 +52,8 @@ class TelnetClient:
     '''
     def logout_host(self):
         self.tn.write(b"exit\n")
-        msg = self.host_ip + ':登出'
-        logging.info(msg)
+        msg = self.name + '登出'
+        logging.info(self.host_ip + ':' + msg)
         return True, msg
 
     '''
