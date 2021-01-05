@@ -66,7 +66,7 @@ class TelnetClient:
         time.sleep(2)
         # 获取命令结果
         result = self.tn.read_very_eager().decode('ascii')
-        logging.info('命令执行结果:\n%s' % result)
+        logging.info('Command Result:\n%s' % result)
         return result
 
     '''
@@ -81,13 +81,14 @@ class TelnetClient:
         time.sleep(2)
         enable_result = self.tn.read_very_eager().decode('ascii')
         if 'Password:' not in enable_result:
-            msg = self.host_ip + ':已进入特权模式'
+            msg = '进入特权模式'
+            logging.info(self.host_ip + ':' + msg)
             # 成功则记录设备的特权密码
             self.enable_pwd = en_password
             return True, msg
         else:
-            msg = self.host_ip + ':进入特权模式失败'
-            logging.warning(msg)
+            msg = '进入特权模式失败，密码错误'
+            logging.warning(self.host_ip + ':' + msg)
             return False, msg
 
     '''
@@ -98,7 +99,7 @@ class TelnetClient:
     def init_serial(self, serial_ip, mask):
         self.execute_command('configure terminal')
         for i, ip in zip(range(len(serial_ip)), serial_ip):
-            # 通过ip是否为空判断是否要配置对应serial口
+            # 通过ip是否为'-'判断是否要配置对应串行接口
             if len(ip) > 1:
                 self.execute_command('interface s0/0/' + str(i))
                 self.execute_command('ip address ' + ip + ' ' + mask)
@@ -107,7 +108,8 @@ class TelnetClient:
                 self.execute_command('exit')
         self.execute_command('exit')
 
-        msg = self.host_ip + ':串行接口配置完成'
+        msg = self.name + '串行接口配置完成'
+        logging.info(self.host_ip + ':' + msg)
         return True, msg
 
     '''
@@ -121,7 +123,8 @@ class TelnetClient:
             self.execute_command('network ' + network)
         self.execute_command('exit')
         self.execute_command('exit')
-        msg = self.host_ip + ':RIP配置完成'
+        msg = 'RIP配置成功'
+        logging.info(self.host_ip + ':' + msg)
         return True, msg
 
     '''
@@ -136,5 +139,6 @@ class TelnetClient:
             self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
         self.execute_command('exit')
         self.execute_command('exit')
-        msg = self.host_ip + ':OSPF配置完成'
+        msg = self.host_ip + 'OSPF配置成功'
+        logging.info(self.host_ip + ':' + msg)
         return True, msg
