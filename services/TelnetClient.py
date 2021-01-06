@@ -1,6 +1,7 @@
 import logging
 import telnetlib
 import time
+from IPy import IP
 
 
 class TelnetClient:
@@ -19,6 +20,7 @@ class TelnetClient:
     ip          设备IP
     password    telnet密码
     '''
+
     def login_host(self, ip, password):
         try:
             self.tn.open(ip, port=23)
@@ -50,6 +52,7 @@ class TelnetClient:
     '''
     telnet登出设备
     '''
+
     def logout_host(self):
         self.tn.write(b"exit\n")
         msg = self.name + '登出'
@@ -60,6 +63,7 @@ class TelnetClient:
     执行命令，并输出执行结果
     command     命令语句
     '''
+
     def execute_command(self, command):
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
@@ -73,6 +77,7 @@ class TelnetClient:
     进入特权模式
     en_password     特权密码
     '''
+
     def enable(self, en_password):
         self.execute_command('enable')
         self.tn.read_until(b'Password: ', timeout=10)
@@ -96,6 +101,7 @@ class TelnetClient:
     serial_ip   串行接口IP
     mask        子网掩码
     '''
+
     def init_serial(self, serial_ip, mask):
         self.execute_command('configure terminal')
         for i, ip in zip(range(len(serial_ip)), serial_ip):
@@ -116,11 +122,13 @@ class TelnetClient:
     配置RIP协议
     networks    网络列表
     '''
-    def config_rip(self, networks):
+
+    def config_rip(self, networks, mask):
         self.execute_command('configure terminal')
         self.execute_command('router rip')
         for network in networks:
-            self.execute_command('network ' + network)
+            if len(network) > 1:
+                self.execute_command('network ' + IP(network).make_net(mask).strNormal(0))
         self.execute_command('exit')
         self.execute_command('exit')
         msg = 'RIP配置成功'
@@ -130,15 +138,32 @@ class TelnetClient:
     '''
     配置OSPF协议
     areas   区域列表，测试时可全部设为0
-    mask    掩码补码，0.0.255.255
+    mask    子网掩码
     '''
+
     def config_ospf(self, networks, areas, mask):
+        # 计算掩码反码
+        mask_list = mask.split('.')
+        negative_mask = ''
+        for i, m in zip(range(len(mask_list)), mask_list):
+            negative_mask += str(255 - int(m))
+            if i < len(mask_list) - 1:
+                negative_mask += '.'
         self.execute_command('configure terminal')
         self.execute_command('router ospf 1')
         for network, area in zip(networks, areas):
-            self.execute_command('network ' + network + ' ' + mask + ' area ' + area)
+            self.execute_command(
+                'network ' + IP(network).make_net(mask).strNormal(0) + ' ' + negative_mask + ' area ' + area)
         self.execute_command('exit')
         self.execute_command('exit')
         msg = self.host_ip + 'OSPF配置成功'
         logging.info(self.host_ip + ':' + msg)
+        return True, msg
+
+    '''
+    配置BGP
+    '''
+
+    def config_bgp(self, networks, mask):
+        msg = 'BGP\n'
         return True, msg

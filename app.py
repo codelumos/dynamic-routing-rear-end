@@ -110,14 +110,14 @@ def init_serial():
     data = json.loads(request.get_data())
     logging.info('Init Serial:' + str(data))
     # 获取各个路由器配置信息，包括串行接口IP、子网掩码
-    info_r0 = data['r0']
-    info_r1 = data['r1']
-    info_r2 = data['r2']
+    r0 = data['r0']
+    r1 = data['r1']
+    r2 = data['r2']
     try:
         # 执行配置命令
-        is_succeed_r0, info_r0 = router0.init_serial(info_r0['serial_ip'], info_r0['mask'])
-        is_succeed_r1, info_r1 = router1.init_serial(info_r1['serial_ip'], info_r1['mask'])
-        is_succeed_r2, info_r2 = router2.init_serial(info_r2['serial_ip'], info_r2['mask'])
+        is_succeed_r0, info_r0 = router0.init_serial(r0['serial_ip'], r0['mask'])
+        is_succeed_r1, info_r1 = router1.init_serial(r1['serial_ip'], r1['mask'])
+        is_succeed_r2, info_r2 = router2.init_serial(r2['serial_ip'], r2['mask'])
         # 返回信息
         is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
         if is_succeed:
@@ -163,11 +163,16 @@ def show_info():
 # 配置RIP协议
 @app.route('/config/rip', methods=['POST'])
 def config_rip():
-    logging.info('Config RIP')
+    data = json.loads(request.get_data())
+    logging.info('Config RIP:' + str(data))
+    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
+    r0 = data['r0']
+    r1 = data['r1']
+    r2 = data['r2']
     try:
-        is_succeed_r0, info_r0 = router0.config_rip(['172.16.0.0', '172.17.0.0'])
-        is_succeed_r1, info_r1 = router1.config_rip(['172.16.0.0', '172.17.0.0', '172.18.0.0'])
-        is_succeed_r2, info_r2 = router2.config_rip(['172.16.0.0', '172.18.0.0'])
+        is_succeed_r0, info_r0 = router0.config_rip(['172.16.0.0', r0['serial0'], r0['serial1']], r0['mask'])
+        is_succeed_r1, info_r1 = router1.config_rip(['172.16.0.0', r1['serial0'], r1['serial1']], r1['mask'])
+        is_succeed_r2, info_r2 = router2.config_rip(['172.16.0.0', r2['serial0'], r2['serial1']], r2['mask'])
         is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
         if is_succeed:
             msg = 'RIP协议配置成功'
@@ -187,12 +192,19 @@ def config_rip():
 # 配置OSPF协议
 @app.route('/config/ospf', methods=['POST'])
 def config_ospf():
-    logging.info('Config OSPF')
+    data = json.loads(request.get_data())
+    logging.info('Config OSPF:' + str(data))
+    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
+    r0 = data['r0']
+    r1 = data['r1']
+    r2 = data['r2']
     try:
-        is_succeed_r0, info_r0 = router0.config_ospf(['172.16.0.0', '172.17.0.0'], ['0', '0'], '0.0.255.255')
-        is_succeed_r1, info_r1 = router1.config_ospf(['172.16.0.0', '172.17.0.0', '172.18.0.0'], ['0', '0', '0'],
-                                                     '0.0.255.255')
-        is_succeed_r2, info_r2 = router2.config_ospf(['172.16.0.0', '172.18.0.0'], ['0', '0'], '0.0.255.255')
+        is_succeed_r0, info_r0 = router0.config_ospf(['172.16.0.0', r0['serial0'], r0['serial1']], ['0', '0'],
+                                                     r0['mask'])
+        is_succeed_r1, info_r1 = router1.config_ospf(['172.16.0.0', r1['serial0'], r1['serial1']], ['0', '0', '0'],
+                                                     r1['mask'])
+        is_succeed_r2, info_r2 = router2.config_ospf(['172.16.0.0', r2['serial0'], r2['serial1']], ['0', '0'],
+                                                     r2['mask'])
 
         is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
         if is_succeed:
@@ -213,12 +225,23 @@ def config_ospf():
 # 配置BGP协议（仅测试）
 @app.route('/config/bgp', methods=['POST'])
 def config_bgp():
-    logging.info('Config BGP')
-    is_succeed = True
-    msg = 'BGP协议配置成功'
-    # is_succeed = False
-    # msg = 'BGP协议配置失败'
-    info = '配置BGP协议（仅测试）'
+    data = json.loads(request.get_data())
+    logging.info('Config BGP:' + str(data))
+    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
+    r0 = data['r0']
+    r1 = data['r1']
+    r2 = data['r2']
+
+    is_succeed_r0, info_r0 = router0.config_bgp(['172.16.0.0', r0['serial0'], r0['serial1']], r0['mask'])
+    is_succeed_r1, info_r1 = router1.config_bgp(['172.16.0.0', r1['serial0'], r1['serial1']], r1['mask'])
+    is_succeed_r2, info_r2 = router2.config_bgp(['172.16.0.0', r2['serial0'], r2['serial1']], r2['mask'])
+    is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
+    if is_succeed:
+        msg = 'BGP协议配置成功'
+    else:
+        msg = 'BGP协议配置失败'
+
+    info = 'Router0#' + info_r0 + '\nRouter1#' + info_r1 + '\nRouter2#' + info_r2
     result = {'state': is_succeed, 'msg': msg, 'info': info}
     return jsonify(result)
 
