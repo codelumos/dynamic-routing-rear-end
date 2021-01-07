@@ -156,7 +156,7 @@ class TelnetClient:
         return True, msg
 
     '''
-    配置BGP
+    配置BGP（仅测试）
     '''
     def config_bgp(self, networks, mask):
         msg = 'BGP\n'

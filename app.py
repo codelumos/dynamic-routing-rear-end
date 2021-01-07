@@ -38,7 +38,7 @@ def telnet_login():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '登陆失败'
+        msg = '服务器错误'
 
     result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
@@ -62,7 +62,7 @@ def telnet_logout():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '登出失败'
+        msg = '服务器错误'
 
     result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
@@ -88,7 +88,7 @@ def enable():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '后端运行错误'
+        msg = '服务器错误'
         info = 'Error'
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
@@ -128,7 +128,7 @@ def init_serial():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '后端运行错误'
+        msg = '服务器错误'
         info = 'Error'
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
@@ -153,7 +153,7 @@ def show_info():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '后端运行错误'
+        msg = '服务器错误'
         info = {'route': 'Error', 'protocol': 'Error'}
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
@@ -182,7 +182,7 @@ def config_rip():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '后端运行错误'
+        msg = '服务器错误'
         info = 'Error'
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
@@ -215,7 +215,7 @@ def config_ospf():
     except Exception as e:
         logging.error(e)
         is_succeed = False
-        msg = '后端运行错误'
+        msg = '服务器错误'
         info = 'Error'
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
