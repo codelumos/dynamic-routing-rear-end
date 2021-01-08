@@ -42,11 +42,11 @@ class TelnetClient:
             # 登陆成功，则记录设备的ip和密码
             self.host_ip = ip
             self.telnet_pwd = password
-            logging.info(ip + ':' + msg)
+            logging.info(self.name + ':' + ip + ':' + msg)
             return True, msg
         else:
             msg = self.name + '登录失败，密码错误'
-            logging.warning(ip + ':' + msg)
+            logging.warning(self.name + ':' + ip + ':' + msg)
             return False, msg
 
     '''
@@ -54,7 +54,7 @@ class TelnetClient:
     '''
     def logout_host(self):
         self.tn.write(b"exit\n")
-        msg = self.name + '登出'
+        msg = self.name + '退出登录'
         logging.info(self.host_ip + ':' + msg)
         return True, msg
 
@@ -151,13 +151,6 @@ class TelnetClient:
                     'network ' + IP(network).make_net(mask).strNormal(0) + ' ' + negative_mask + ' area ' + area)
         self.execute_command('exit')
         self.execute_command('exit')
-        msg = self.host_ip + 'OSPF配置成功'
+        msg = self.name + ':OSPF配置成功'
         logging.info(self.host_ip + ':' + msg)
-        return True, msg
-
-    '''
-    配置BGP（仅测试）
-    '''
-    def config_bgp(self, networks, mask):
-        msg = 'BGP\n'
         return True, msg

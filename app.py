@@ -145,11 +145,12 @@ def show_info():
     try:
         device = get_device(dev_no)
         # 执行命令
+        device.execute_command('terminal length 0')  # 命令不分页显示
         route = device.execute_command('show ip route')
         protocol = device.execute_command('show ip protocols')
         is_succeed = True
         msg = get_protocol(protocol)
-        info = {'route': device.name + '>' + route, 'protocol': device.name + '>' + protocol}
+        info = {'route': device.name + '# ' + route, 'protocol': device.name + '# ' + protocol}
     except Exception as e:
         logging.error(e)
         is_succeed = False
@@ -218,30 +219,6 @@ def config_ospf():
         msg = '服务器错误'
         info = 'Error'
 
-    result = {'state': is_succeed, 'msg': msg, 'info': info}
-    return jsonify(result)
-
-
-# 配置BGP协议（仅测试）
-@app.route('/config/bgp', methods=['POST'])
-def config_bgp():
-    data = json.loads(request.get_data())
-    logging.info('Config BGP:' + str(data))
-    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
-    r0 = data['r0']
-    r1 = data['r1']
-    r2 = data['r2']
-
-    is_succeed_r0, info_r0 = router0.config_bgp(['172.16.0.0', r0['serial0'], r0['serial1']], r0['mask'])
-    is_succeed_r1, info_r1 = router1.config_bgp(['172.16.0.0', r1['serial0'], r1['serial1']], r1['mask'])
-    is_succeed_r2, info_r2 = router2.config_bgp(['172.16.0.0', r2['serial0'], r2['serial1']], r2['mask'])
-    is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
-    if is_succeed:
-        msg = 'BGP协议配置成功'
-    else:
-        msg = 'BGP协议配置失败'
-
-    info = 'Router0#' + info_r0 + '\nRouter1#' + info_r1 + '\nRouter2#' + info_r2
     result = {'state': is_succeed, 'msg': msg, 'info': info}
     return jsonify(result)
 
