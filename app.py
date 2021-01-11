@@ -27,18 +27,18 @@ def telnet_login():
     dev_no = data['dev_no']
     ip = data['ip']
     pwd = data['pwd']
-    try:
-        device = get_device(dev_no)
-        # 登录成功返加true，否则返回false
-        if device is not None:
+    device = get_device(dev_no)
+    # 登陆
+    if device is not None:
+        try:
             is_succeed, msg = device.login_host(ip, pwd)
-        else:
+        except Exception as e:
+            logging.error('Login:' + str(e))
             is_succeed = False
-            msg = '不支持的设备'
-    except Exception as e:
-        logging.error(e)
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
+        msg = dev_no + ' - 不支持的设备'
 
     result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
@@ -51,18 +51,18 @@ def telnet_logout():
     logging.info('Logout:' + str(data))
     # 获取设备编号
     dev_no = data['dev_no']
-    try:
-        device = get_device(dev_no)
-        # 登出成功返加true，否则返回false
-        if device is not None:
+    device = get_device(dev_no)
+    # 登出
+    if device is not None:
+        try:
             is_succeed, msg = device.logout_host()
-        else:
+        except Exception as e:
+            logging.error('Logout:' + str(e))
             is_succeed = False
-            msg = '不支持的设备'
-    except Exception as e:
-        logging.error(e)
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
+        msg = dev_no + ' - 不支持的设备'
 
     result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
@@ -73,65 +73,49 @@ def telnet_logout():
 def enable():
     data = json.loads(request.get_data())
     logging.info('Enable:' + str(data))
-    try:
-        # 执行配置命令
-        is_succeed_r0, info_r0 = router0.enable(data['pwd_r0'])
-        is_succeed_r1, info_r1 = router1.enable(data['pwd_r1'])
-        is_succeed_r2, info_r2 = router2.enable(data['pwd_r2'])
-        # 返回信息
-        is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
-        if is_succeed:
-            msg = '进入特权模式'
-        else:
-            msg = '进入特权模式失败'
-        info = 'Router0>' + info_r0 + '\nRouter1>' + info_r1 + '\nRouter2>' + info_r2
-    except Exception as e:
-        logging.error(e)
+    # 获取设备编号, 特权密码
+    dev_no = data['dev_no']
+    pwd = data['pwd']
+    device = get_device(dev_no)
+    # 进入特权模式
+    if device is not None:
+        try:
+            is_succeed, msg = device.enable(pwd)
+        except Exception as e:
+            logging.error('Enable:' + str(e))
+            is_succeed = False
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
-        info = 'Error'
+        msg = dev_no + ' - 不支持的设备'
 
-    result = {'state': is_succeed, 'msg': msg, 'info': info}
+    result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
 
 
 # 配置串行接口
 @app.route('/init', methods=['POST'])
 def init_serial():
-    """
-    前端传递数据格式
-    {
-        "r0": {
-            "serial_ip": ["1.1.1.1", "2.2.2.2"],
-            "mask": "255.255.0.0"
-        }
-    }
-    """
     data = json.loads(request.get_data())
     logging.info('Init Serial:' + str(data))
-    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
-    r0 = data['r0']
-    r1 = data['r1']
-    r2 = data['r2']
-    try:
-        # 执行配置命令
-        is_succeed_r0, info_r0 = router0.init_serial(r0['serial_ip'], r0['mask'])
-        is_succeed_r1, info_r1 = router1.init_serial(r1['serial_ip'], r1['mask'])
-        is_succeed_r2, info_r2 = router2.init_serial(r2['serial_ip'], r2['mask'])
-        # 返回信息
-        is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
-        if is_succeed:
-            msg = '配置串行接口成功'
-        else:
-            msg = '配置串行接口失败'
-        info = 'Router0#' + info_r0 + '\nRouter1#' + info_r1 + '\nRouter2#' + info_r2
-    except Exception as e:
-        logging.error(e)
+    # 获取设备编号, 串行接口IP列表, 子网掩码
+    dev_no = data['dev_no']
+    ip_list = data['ip_list']
+    mask = data['mask']
+    device = get_device(dev_no)
+    # 初始化串行接口
+    if device is not None:
+        try:
+            is_succeed, msg = device.init_serial(ip_list, mask)
+        except Exception as e:
+            logging.error('Init Serial:' + str(e))
+            is_succeed = False
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
-        info = 'Error'
+        msg = dev_no + ' - 不支持的设备'
 
-    result = {'state': is_succeed, 'msg': msg, 'info': info}
+    result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
 
 
@@ -142,20 +126,25 @@ def show_info():
     logging.info('Show info:' + str(data))
     # 获取设备编号
     dev_no = data['dev_no']
-    try:
-        device = get_device(dev_no)
-        # 执行命令
-        device.execute_command('terminal length 0')  # 命令不分页显示
-        route = device.execute_command('show ip route')
-        protocol = device.execute_command('show ip protocols')
-        is_succeed = True
-        msg = get_protocol(protocol)
-        info = {'route': device.name + '# ' + route, 'protocol': device.name + '# ' + protocol}
-    except Exception as e:
-        logging.error(e)
+    device = get_device(dev_no)
+    # 查看信息
+    if device is not None:
+        try:
+            device.execute_command('terminal length 0')  # 命令不分页显示
+            route = device.execute_command('show ip route')
+            protocol = device.execute_command('show ip protocols')
+            is_succeed = True
+            msg = get_protocol(protocol)
+            info = {'route': device.name + '# ' + route, 'protocol': device.name + '# ' + protocol}
+        except Exception as e:
+            logging.error('Show info:' + str(e))
+            is_succeed = False
+            msg = device.name + ' - 服务器错误'
+            info = {'route': 'Error', 'protocol': 'Error'}
+    else:
         is_succeed = False
-        msg = '服务器错误'
-        info = {'route': 'Error', 'protocol': 'Error'}
+        msg = dev_no + ' - 不支持的设备'
+        info = {'route': 'Unknown device', 'protocol': 'Unknown device'}
 
     result = {'state': is_succeed, 'msg': msg, 'info': info}
     return jsonify(result)
@@ -166,27 +155,26 @@ def show_info():
 def config_rip():
     data = json.loads(request.get_data())
     logging.info('Config RIP:' + str(data))
-    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
-    r0 = data['r0']
-    r1 = data['r1']
-    r2 = data['r2']
-    try:
-        is_succeed_r0, info_r0 = router0.config_rip(['172.16.0.0', r0['serial0'], r0['serial1']], r0['mask'])
-        is_succeed_r1, info_r1 = router1.config_rip(['172.16.0.0', r1['serial0'], r1['serial1']], r1['mask'])
-        is_succeed_r2, info_r2 = router2.config_rip(['172.16.0.0', r2['serial0'], r2['serial1']], r2['mask'])
-        is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
-        if is_succeed:
-            msg = 'RIP协议配置成功'
-        else:
-            msg = 'RIP协议配置失败'
-        info = 'Router0#' + info_r0 + '\nRouter1#' + info_r1 + '\nRouter2#' + info_r2
-    except Exception as e:
-        logging.error(e)
+    # 获取设备编号, 配置信息
+    dev_no = data['dev_no']
+    dev_data = data['dev_data']
+    device = get_device(dev_no)
+    # 配置RIP协议
+    if device is not None:
+        # 获取参数
+        networks = ['172.16.0.0', dev_data['serial0'], dev_data['serial1']]
+        # 配置协议
+        try:
+            is_succeed, msg = device.config_rip(networks, dev_data['mask'])
+        except Exception as e:
+            logging.error('Config RIP:' + str(e))
+            is_succeed = False
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
-        info = 'Error'
+        msg = dev_no + ' - 不支持的设备'
 
-    result = {'state': is_succeed, 'msg': msg, 'info': info}
+    result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
 
 
@@ -195,31 +183,30 @@ def config_rip():
 def config_ospf():
     data = json.loads(request.get_data())
     logging.info('Config OSPF:' + str(data))
-    # 获取各个路由器配置信息，包括串行接口IP、子网掩码
-    r0 = data['r0']
-    r1 = data['r1']
-    r2 = data['r2']
-    try:
-        is_succeed_r0, info_r0 = router0.config_ospf(['172.16.0.0', r0['serial0'], r0['serial1']], ['0', '0'],
-                                                     r0['mask'])
-        is_succeed_r1, info_r1 = router1.config_ospf(['172.16.0.0', r1['serial0'], r1['serial1']], ['0', '0', '0'],
-                                                     r1['mask'])
-        is_succeed_r2, info_r2 = router2.config_ospf(['172.16.0.0', r2['serial0'], r2['serial1']], ['0', '0'],
-                                                     r2['mask'])
-
-        is_succeed = is_succeed_r0 and is_succeed_r1 and is_succeed_r2
-        if is_succeed:
-            msg = 'OSPF协议配置成功'
+    # 获取设备编号, 配置信息
+    dev_no = data['dev_no']
+    dev_data = data['dev_data']
+    device = get_device(dev_no)
+    # 配置OSPF协议
+    if device is not None:
+        # 获取参数
+        networks = ['172.16.0.0', dev_data['serial0'], dev_data['serial1']]
+        if dev_no == 'r1':
+            area = ['0', '0', '0']
         else:
-            msg = 'OSPF协议配置失败'
-        info = 'Router0#' + info_r0 + '\nRouter1#' + info_r1 + '\nRouter2#' + info_r2
-    except Exception as e:
-        logging.error(e)
+            area = ['0', '0']
+        # 配置协议
+        try:
+            is_succeed, msg = device.config_ospf(networks, area, dev_data['mask'])
+        except Exception as e:
+            logging.error('Config OSPF:' + str(e))
+            is_succeed = False
+            msg = device.name + ' - 服务器错误'
+    else:
         is_succeed = False
-        msg = '服务器错误'
-        info = 'Error'
+        msg = dev_no + ' - 不支持的设备'
 
-    result = {'state': is_succeed, 'msg': msg, 'info': info}
+    result = {'state': is_succeed, 'msg': msg}
     return jsonify(result)
 
 

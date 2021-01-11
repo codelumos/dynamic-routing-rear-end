@@ -25,7 +25,7 @@ class TelnetClient:
         try:
             self.tn.open(ip, port=23)
         except:
-            msg = '网络连接失败'
+            msg = self.name + ' - 网络连接超时'
             logging.warning(ip + ':' + msg)
             return False, msg
         # 等待Password出现后输入密码，最多等待10秒
@@ -38,15 +38,15 @@ class TelnetClient:
         login_result = self.tn.read_very_eager().decode('ascii')
         # 当密码错误时，会提示再次输入密码，以此来判断密码错误
         if 'Password:' not in login_result:
-            msg = self.name + '登录成功'
+            msg = self.name + ' - 登录成功'
             # 登陆成功，则记录设备的ip和密码
             self.host_ip = ip
             self.telnet_pwd = password
-            logging.info(self.name + ':' + ip + ':' + msg)
+            logging.info(ip + ':' + msg)
             return True, msg
         else:
-            msg = self.name + '登录失败，密码错误'
-            logging.warning(self.name + ':' + ip + ':' + msg)
+            msg = self.name + ' - 登录失败，密码错误'
+            logging.warning(ip + ':' + msg)
             return False, msg
 
     '''
@@ -54,7 +54,7 @@ class TelnetClient:
     '''
     def logout_host(self):
         self.tn.write(b"exit\n")
-        msg = self.name + '退出登录'
+        msg = self.name + ' - 退出登录'
         logging.info(self.host_ip + ':' + msg)
         return True, msg
 
@@ -63,12 +63,13 @@ class TelnetClient:
     command     命令语句
     '''
     def execute_command(self, command):
+        logging.info(self.host_ip + ':' + self.name + ' Command:' + command)
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
         time.sleep(2)
         # 获取命令结果
         result = self.tn.read_very_eager().decode('ascii')
-        logging.info('Command Result:\n%s' % result)
+        logging.info(self.host_ip + ':' + self.name + ' Command Result:' + result)
         return result
 
     '''
@@ -83,13 +84,13 @@ class TelnetClient:
         time.sleep(2)
         enable_result = self.tn.read_very_eager().decode('ascii')
         if 'Password:' not in enable_result:
-            msg = '进入特权模式'
+            msg = self.name + ' - 进入特权模式'
             logging.info(self.host_ip + ':' + msg)
             # 成功则记录设备的特权密码
             self.enable_pwd = en_password
             return True, msg
         else:
-            msg = '进入特权模式失败，密码错误'
+            msg = self.name + ' - 进入特权模式失败，密码错误'
             logging.warning(self.host_ip + ':' + msg)
             return False, msg
 
@@ -110,7 +111,7 @@ class TelnetClient:
                 self.execute_command('exit')
         self.execute_command('exit')
 
-        msg = self.name + '串行接口配置完成'
+        msg = self.name + ' - 串行接口配置成功'
         logging.info(self.host_ip + ':' + msg)
         return True, msg
 
@@ -126,7 +127,7 @@ class TelnetClient:
                 self.execute_command('network ' + IP(network).make_net(mask).strNormal(0))
         self.execute_command('exit')
         self.execute_command('exit')
-        msg = 'RIP配置成功'
+        msg = self.name + ' - RIP协议配置成功'
         logging.info(self.host_ip + ':' + msg)
         return True, msg
 
@@ -151,6 +152,6 @@ class TelnetClient:
                     'network ' + IP(network).make_net(mask).strNormal(0) + ' ' + negative_mask + ' area ' + area)
         self.execute_command('exit')
         self.execute_command('exit')
-        msg = self.name + ':OSPF配置成功'
+        msg = self.name + ' - OSPF协议配置成功'
         logging.info(self.host_ip + ':' + msg)
         return True, msg
