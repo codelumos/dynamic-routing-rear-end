@@ -69,7 +69,7 @@ class TelnetClient:
         time.sleep(2)
         # 获取命令结果
         result = self.tn.read_very_eager().decode('ascii')
-        logging.info(self.host_ip + ':' + self.name + ' Command Result:' + result)
+        logging.info(self.host_ip + ':' + self.name + ' Result:' + result)
         return result
 
     '''

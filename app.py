@@ -162,7 +162,7 @@ def config_rip():
     # 配置RIP协议
     if device is not None:
         # 获取参数
-        networks = ['172.16.0.0', dev_data['serial0'], dev_data['serial1']]
+        networks = [device.host_ip, dev_data['serial0'], dev_data['serial1']]
         # 配置协议
         try:
             is_succeed, msg = device.config_rip(networks, dev_data['mask'])
@@ -190,7 +190,7 @@ def config_ospf():
     # 配置OSPF协议
     if device is not None:
         # 获取参数
-        networks = ['172.16.0.0', dev_data['serial0'], dev_data['serial1']]
+        networks = [device.host_ip, dev_data['serial0'], dev_data['serial1']]
         if dev_no == 'r1':
             area = ['0', '0', '0']
         else:
