@@ -45,7 +45,7 @@ class TelnetClient:
             logging.info(ip + ':' + msg)
             return True, msg
         else:
-            msg = self.name + ' - 登录失败，密码错误'
+            msg = self.name + ' - Telnet密码错误'
             logging.warning(ip + ':' + msg)
             return False, msg
 
@@ -90,7 +90,7 @@ class TelnetClient:
             self.enable_pwd = en_password
             return True, msg
         else:
-            msg = self.name + ' - 进入特权模式失败，密码错误'
+            msg = self.name + ' - 特权密码错误'
             logging.warning(self.host_ip + ':' + msg)
             return False, msg
 
