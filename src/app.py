@@ -4,7 +4,7 @@ import logging
 from flask import Flask, request, jsonify
 from flask_cors import *
 
-from services.TelnetClient import TelnetClient
+from service.TelnetClient import TelnetClient
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # 允许跨域访问

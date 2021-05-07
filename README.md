@@ -18,7 +18,7 @@
 
 ## 运行环境
 
-Python 3.8.7 with Flask 1.1.2, flask_cors 3.0.9, IPy 1.1
+Python with Flask, flask_cors, IPy
 
 ## 构建安装
 
