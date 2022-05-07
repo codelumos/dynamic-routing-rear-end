@@ -18,13 +18,11 @@
 
 ## 运行环境
 
-Python with Flask, flask_cors, IPy
+Python 3 with Flask
 
 ## 构建安装
 
-需要完成物理拓扑搭建，其余所有操作在浏览器客户端完成
-
-程序入口: app.py
+首先完成物理拓扑搭建，然后启动动态路由后端项目，其余操作需要启动[`动态路由前端`](https://github.com/codelumos/dynamic-routing-front-end)项目完成
 
 ```
 # Switch2
